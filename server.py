@@ -11,6 +11,7 @@ An MCP server that provides image processing tools:
 import asyncio
 import logging
 import os
+import random
 import signal
 import sys
 from typing import Optional
@@ -28,7 +29,7 @@ logger = logging.getLogger("image-tools-server")
 mcp = FastMCP("image-tools-server")
 
 @mcp.tool()
-async def fetch_toy_image(keyword: str, count: int = 3, output_dir: str = "./images") -> str:
+async def fetch_toy_image(keyword: str, count: int = 3, output_dir: str = "./images", max_search_results: int = 20) -> str:
     """Download toy-related images from the web using DuckDuckGo image search."""
     
     # Ensure keyword includes "toy" for better results
@@ -51,10 +52,20 @@ async def fetch_toy_image(keyword: str, count: int = 3, output_dir: str = "./ima
                 region="wt-wt",
                 safesearch="moderate",
                 size="medium",
-                max_results=count * 2  # Get more results to account for failed downloads
+                max_results=max_search_results  # Get more results for randomness
             )
             
-            for i, result in enumerate(ddgs_images_gen):
+            # Collect all results first
+            all_results = list(ddgs_images_gen)
+            
+            # Randomly shuffle and select from available results
+            if all_results:
+                random.shuffle(all_results)
+                selected_results = all_results[:min(count * 3, len(all_results))]  # Select up to 3x count for backup
+            else:
+                selected_results = []
+            
+            for i, result in enumerate(selected_results):
                 if downloaded_count >= count:
                     break
                 
