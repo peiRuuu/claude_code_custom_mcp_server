@@ -17,7 +17,6 @@ import sys
 from typing import Optional
 import requests
 from PIL import Image
-import rembg
 
 from mcp.server.fastmcp import FastMCP
 
@@ -153,41 +152,6 @@ async def resize_image(image_path: str, width: int, height: int, output_path: Op
             
     except Exception as e:
         return f"Error resizing image: {str(e)}"
-
-@mcp.tool()
-async def remove_background_as_png(image_path: str, output_path: Optional[str] = None, model: str = "u2net") -> str:
-    """Remove background from image keeping only the main object, save as PNG."""
-    
-    if not os.path.exists(image_path):
-        return f"Error: Image file not found: {image_path}"
-    
-    try:
-        # Determine output path
-        if not output_path:
-            name, _ = os.path.splitext(image_path)
-            output_path = f"{name}_nobg.png"
-        
-        # Load image
-        with open(image_path, 'rb') as f:
-            input_data = f.read()
-        
-        # Remove background using new_session
-        session = rembg.new_session(model)
-        output_data = rembg.remove(input_data, session=session)
-        
-        # Save as PNG
-        with open(output_path, 'wb') as f:
-            f.write(output_data)
-        
-        result_text = f"Background removed successfully!\n"
-        result_text += f"Model used: {model}\n"
-        result_text += f"Input: {image_path}\n"
-        result_text += f"Output: {output_path}"
-        
-        return result_text
-        
-    except Exception as e:
-        return f"Error removing background: {str(e)}"
 
 if __name__ == "__main__":
     mcp.run()

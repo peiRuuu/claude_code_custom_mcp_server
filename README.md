@@ -143,7 +143,6 @@ mcp-toy-image-tools/
 ### Python Libraries
 - **mcp**: Anthropic's Model Context Protocol SDK
 - **Pillow**: Python Imaging Library for image processing
-- **rembg**: AI-powered background removal
 - **requests**: HTTP client for downloading images
 - **duckduckgo-search**: DuckDuckGo search API client
 - **torch/torchvision**: PyTorch for AI model inference
