@@ -1,0 +1,20 @@
+# MCP SDK for Anthropic
+mcp>=1.0.0
+
+# Image processing and manipulation
+Pillow>=10.0.0
+
+# Background removal using AI models
+rembg>=2.0.50
+onnxruntime>=1.15.0
+
+# HTTP requests for image downloading
+requests>=2.31.0
+
+# DuckDuckGo search for finding images
+duckduckgo-search>=6.1.0
+
+# Additional dependencies that might be needed
+numpy>=1.24.0
+torch>=2.0.0
+torchvision>=0.15.0
