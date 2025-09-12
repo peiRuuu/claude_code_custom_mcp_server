@@ -2,6 +2,8 @@
 
 A Model Context Protocol (MCP) server that provides powerful image processing tools for Claude Code. This server implements three main functionalities: downloading toy-related images from the web, resizing images, and removing backgrounds from images.
 
+- Anthropic MCP Pythone SDK Github repo: https://github.com/modelcontextprotocol/python-sdk?tab=readme-ov-file
+
 ## Features
 
 ### 🧸 Toy Image Fetcher (`fetch_toy_image`)
