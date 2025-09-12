@@ -10,8 +10,7 @@
         "-v", "${PWD}/input:/app/input",
         "-v", "${PWD}/output:/app/output",
         "mcp-toy-image-tools-server"
-      ],
-      "cwd": "/Users/stsai/tmp/claude_code_custom_mcp_server_002"
+      ]
     }
   }
 }
