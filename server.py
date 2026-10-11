@@ -19,14 +19,14 @@ import requests
 from PIL import Image
 import rembg
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("image-tools-server")
 
 # Create server instance
-mcp = FastMCP("image-tools-server")
+mcp = MCPServer("image-tools-server")
 
 @mcp.tool()
 async def fetch_toy_image(keyword: str, count: int = 3, output_dir: str = "./images", max_search_results: int = 20) -> str:
@@ -39,71 +39,66 @@ async def fetch_toy_image(keyword: str, count: int = 3, output_dir: str = "./ima
     os.makedirs(output_dir, exist_ok=True)
     
     try:
-        # Using DuckDuckGo image search (simulated - in real implementation you'd use duckduckgo-search library)
-        # For this example, we'll use a placeholder approach
-        from duckduckgo_search import DDGS
-        
+        # duckduckgo-search was renamed to ddgs (old package frozen at 8.1.1, gets rate-limited)
+        from ddgs import DDGS
+
         results = []
         downloaded_count = 0
+
+        all_results = DDGS().images(
+            query=search_term,
+            region="us-en",
+            safesearch="moderate",
+            size="Medium",
+            max_results=max_search_results  # Get more results for randomness
+        )
         
-        with DDGS() as ddgs:
-            ddgs_images_gen = ddgs.images(
-                keywords=search_term,
-                region="wt-wt",
-                safesearch="moderate",
-                size="medium",
-                max_results=max_search_results  # Get more results for randomness
-            )
+        # Randomly shuffle and select from available results
+        if all_results:
+            random.shuffle(all_results)
+            selected_results = all_results[:min(count * 3, len(all_results))]  # Select up to 3x count for backup
+        else:
+            selected_results = []
+        
+        for i, result in enumerate(selected_results):
+            if downloaded_count >= count:
+                break
             
-            # Collect all results first
-            all_results = list(ddgs_images_gen)
-            
-            # Randomly shuffle and select from available results
-            if all_results:
-                random.shuffle(all_results)
-                selected_results = all_results[:min(count * 3, len(all_results))]  # Select up to 3x count for backup
-            else:
-                selected_results = []
-            
-            for i, result in enumerate(selected_results):
-                if downloaded_count >= count:
-                    break
-                
-                try:
-                    image_url = result.get("image")
-                    if not image_url:
-                        continue
-                    
-                    # Download image
-                    response = requests.get(image_url, timeout=10, headers={
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                    })
-                    response.raise_for_status()
-                    
-                    # Determine file extension
-                    content_type = response.headers.get('content-type', '')
-                    if 'jpeg' in content_type or 'jpg' in content_type:
-                        ext = 'jpg'
-                    elif 'png' in content_type:
-                        ext = 'png'
-                    elif 'gif' in content_type:
-                        ext = 'gif'
-                    else:
-                        ext = 'jpg'  # Default
-                    
-                    # Save image
-                    filename = f"{keyword.replace(' ', '_')}_{downloaded_count + 1}.{ext}"
-                    filepath = os.path.join(output_dir, filename)
-                    
-                    with open(filepath, 'wb') as f:
-                        f.write(response.content)
-                    
-                    results.append(f"Downloaded: {filepath}")
-                    downloaded_count += 1
-                    
-                except Exception as e:
-                    logger.warning(f"Failed to download image {i}: {str(e)}")
+            try:
+                image_url = result.get("image")
+                if not image_url:
                     continue
+                
+                # Download image
+                response = requests.get(image_url, timeout=10, headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                })
+                response.raise_for_status()
+                
+                # Determine file extension
+                content_type = response.headers.get('content-type', '')
+                if 'jpeg' in content_type or 'jpg' in content_type:
+                    ext = 'jpg'
+                elif 'png' in content_type:
+                    ext = 'png'
+                elif 'gif' in content_type:
+                    ext = 'gif'
+                else:
+                    ext = 'jpg'  # Default
+                
+                # Save image
+                filename = f"{keyword.replace(' ', '_')}_{downloaded_count + 1}.{ext}"
+                filepath = os.path.join(output_dir, filename)
+                
+                with open(filepath, 'wb') as f:
+                    f.write(response.content)
+                
+                results.append(f"Downloaded: {filepath}")
+                downloaded_count += 1
+                
+            except Exception as e:
+                logger.warning(f"Failed to download image {i}: {str(e)}")
+                continue
         
         if downloaded_count == 0:
             return "No images were successfully downloaded."
@@ -112,7 +107,7 @@ async def fetch_toy_image(keyword: str, count: int = 3, output_dir: str = "./ima
         return result_text
         
     except ImportError:
-        return "Error: duckduckgo-search library not available. Please install it with: pip install duckduckgo-search"
+        return "Error: ddgs library not available. Please install it with: pip install ddgs"
     except Exception as e:
         return f"Error fetching images: {str(e)}"
 
